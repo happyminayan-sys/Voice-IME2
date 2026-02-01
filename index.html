@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Quick Share Memo</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome (Icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* モバイルブラウザのツールバーによる高さ変動に対応 */
+        /* モバイルブラウザのセーフエリアと高さ調整 */
         :root {
             --sat: env(safe-area-inset-top);
             --sar: env(safe-area-inset-right);
@@ -21,7 +21,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
             height: 100vh;
-            height: 100dvh;
+            height: 100dvh; /* モバイルのアドレスバー対策 */
             margin: 0;
             overflow: hidden;
             overscroll-behavior-y: none;
@@ -32,7 +32,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            max-width: 48rem;
+            max-width: 48rem; /* max-w-3xl */
             margin-left: auto;
             margin-right: auto;
             background-color: white;
@@ -75,13 +75,13 @@
             padding-bottom: calc(1rem + var(--sab));
         }
 
-        /* 画像プレビューのアニメーション */
-        .image-preview-enter {
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        /* フェードインアニメーション */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
         }
     </style>
 <script type="importmap">
@@ -89,8 +89,8 @@
   "imports": {
     "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
   }
 }
 </script>
@@ -108,9 +108,6 @@
                 <button onclick="app.insertTime()" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all p-2 rounded-full active:scale-90" title="日時を挿入">
                     <i class="fa-regular fa-clock text-xl"></i>
                 </button>
-                <button onclick="app.triggerImageSelect()" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all p-2 rounded-full active:scale-90" title="画像を挿入">
-                    <i class="fa-regular fa-image text-xl"></i>
-                </button>
                 <div class="w-px h-4 bg-gray-300 mx-1"></div>
                 <span id="charCount" class="text-[10px] text-gray-400 font-mono w-14 text-right">0文字</span>
                 <button onclick="app.openDeleteModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all p-2 rounded-full ml-1 active:scale-90" title="削除">
@@ -120,26 +117,13 @@
         </header>
 
         <!-- Main Area -->
-        <main class="flex-1 overflow-hidden flex flex-col p-3 pb-1 gap-2 relative">
+        <main class="flex-1 overflow-hidden flex flex-col p-3 pb-1">
             <textarea 
                 id="memoInput" 
                 class="flex-1 w-full p-4 text-[17px] leading-relaxed bg-gray-50/50 rounded-2xl border border-gray-100 focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all resize-none outline-none placeholder-gray-300"
                 placeholder="ここに入力して即共有..."
                 spellcheck="false"
             ></textarea>
-            
-            <!-- Image Preview Area -->
-            <div id="imagePreviewContainer" class="hidden shrink-0 relative group animate-image-preview-enter">
-                <div class="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 max-h-48 flex justify-center">
-                    <img id="previewImage" src="" alt="添付画像" class="h-full object-contain max-h-48 w-auto">
-                    <button onclick="app.removeImage()" class="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 w-8 h-8 flex items-center justify-center transition-all backdrop-blur-sm">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Hidden File Input -->
-            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="app.handleImageSelect(event)">
         </main>
 
         <!-- Footer -->
@@ -149,7 +133,7 @@
                     <i class="fa-regular fa-copy group-active:scale-90 transition-transform text-lg"></i>
                     <span>コピー</span>
                 </button>
-                <button onclick="app.shareContent()" class="col-span-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 active:scale-95">
+                <button onclick="app.shareText()" class="col-span-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 active:scale-95">
                     <i class="fa-solid fa-paper-plane text-lg"></i>
                     <span>共有する</span>
                 </button>
@@ -165,7 +149,7 @@
                     </div>
                 </div>
                 <h3 class="text-lg font-bold text-gray-900 text-center mb-2">すべて消去しますか？</h3>
-                <p class="text-sm text-gray-500 text-center mb-6 leading-relaxed">テキストと添付画像が削除され、新しいタイムスタンプが挿入されます。</p>
+                <p class="text-sm text-gray-500 text-center mb-6 leading-relaxed">消去後、新しいタイムスタンプが自動で挿入されます。</p>
                 <div class="flex gap-3">
                     <button onclick="app.closeDeleteModal()" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors active:scale-95">
                         キャンセル
@@ -179,44 +163,52 @@
     </div>
 
     <script>
+        /**
+         * アプリケーションロジック
+         */
         const app = {
             STORAGE_KEY: 'quickShareMemo',
             dom: {},
-            currentImage: null, // Base64 string
 
+            /**
+             * 初期化処理
+             */
             init() {
+                // DOM要素のキャッシュ
                 this.dom = {
                     memoInput: document.getElementById('memoInput'),
                     charCount: document.getElementById('charCount'),
-                    deleteModal: document.getElementById('deleteModal'),
-                    imageInput: document.getElementById('imageInput'),
-                    imagePreviewContainer: document.getElementById('imagePreviewContainer'),
-                    previewImage: document.getElementById('previewImage')
+                    deleteModal: document.getElementById('deleteModal')
                 };
 
+                // イベントリスナーの設定
                 this.dom.memoInput.addEventListener('input', () => {
-                    this.saveData();
+                    this.saveMemo();
                     this.updateCharCount();
                 });
 
-                this.dom.memoInput.addEventListener('paste', (e) => this.handlePaste(e));
-
+                // モーダル外クリックで閉じる
                 this.dom.deleteModal.addEventListener('click', (e) => {
                     if (e.target === this.dom.deleteModal) this.closeDeleteModal();
                 });
 
-                this.loadData();
+                // データのロード
+                this.loadMemo();
 
+                // iOS/Androidでのキーボード表示時のビューポート調整
                 if (window.visualViewport) {
                     window.visualViewport.addEventListener('resize', () => {
                         document.body.style.height = window.visualViewport.height + 'px';
-                        if (document.activeElement === this.dom.memoInput) {
-                            setTimeout(() => window.scrollTo(0, 0), 100);
-                        }
+                        // スクロール位置を調整して入力欄が見えるようにする
+                        window.scrollTo(0, 0);
                     });
                 }
             },
 
+            /**
+             * 日時フォーマット生成
+             * @returns {string} YYYY/MM/DD(Day) HH:mm
+             */
             getFormattedDate() {
                 const now = new Date();
                 const days = ['日', '月', '火', '水', '木', '金', '土'];
@@ -229,57 +221,46 @@
                 return `${year}/${month}/${date}(${day}) ${hours}:${minutes}`;
             },
 
-            loadData() {
+            /**
+             * メモの読み込み
+             */
+            loadMemo() {
                 const saved = localStorage.getItem(this.STORAGE_KEY);
                 if (saved) {
-                    try {
-                        const data = JSON.parse(saved);
-                        if (typeof data === 'object' && data !== null) {
-                            this.dom.memoInput.value = data.text || '';
-                            if (data.image) {
-                                this.setImage(data.image);
-                            } else {
-                                this.removeImage(false);
-                            }
-                        } else {
-                            this.dom.memoInput.value = saved;
-                        }
-                    } catch (e) {
-                        this.dom.memoInput.value = saved;
-                    }
+                    this.dom.memoInput.value = saved;
                 } else {
                     this.resetWithTimestamp(false);
                 }
                 this.updateCharCount();
             },
 
-            saveData() {
-                const data = {
-                    text: this.dom.memoInput.value,
-                    image: this.currentImage
-                };
-                try {
-                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-                } catch (e) {
-                    console.error('Storage full?', e);
-                }
+            /**
+             * メモの保存
+             */
+            saveMemo() {
+                localStorage.setItem(this.STORAGE_KEY, this.dom.memoInput.value);
             },
 
+            /**
+             * 文字数カウントの更新
+             */
             updateCharCount() {
                 const count = this.dom.memoInput.value.length;
                 this.dom.charCount.textContent = count + '文字';
             },
 
+            /**
+             * リセットしてタイムスタンプ挿入
+             */
             resetWithTimestamp(shouldFocus = true) {
                 const timestamp = this.getFormattedDate();
                 const newText = timestamp + '\n';
                 this.dom.memoInput.value = newText;
-                this.removeImage(false);
-                
-                this.saveData();
+                this.saveMemo();
                 this.updateCharCount();
                 
                 if (shouldFocus) {
+                    // DOM更新後にフォーカスを当てるため少し待つ
                     setTimeout(() => {
                         this.dom.memoInput.focus();
                         this.dom.memoInput.setSelectionRange(newText.length, newText.length);
@@ -287,6 +268,9 @@
                 }
             },
 
+            /**
+             * カーソル位置に日時を挿入
+             */
             insertTime() {
                 const timestamp = this.getFormattedDate();
                 const input = this.dom.memoInput;
@@ -298,7 +282,7 @@
                 const newCursorPos = start + timestamp.length;
 
                 input.value = newText;
-                this.saveData();
+                this.saveMemo();
                 this.updateCharCount();
                 
                 setTimeout(() => {
@@ -307,185 +291,68 @@
                 }, 0);
             },
 
-            // --- 画像関連処理 ---
-
-            triggerImageSelect() {
-                this.dom.imageInput.click();
-            },
-
-            handleImageSelect(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    this.processImageFile(file);
-                }
-                event.target.value = '';
-            },
-
-            handlePaste(event) {
-                const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-                for (let index in items) {
-                    const item = items[index];
-                    if (item.kind === 'file' && item.type.startsWith('image/')) {
-                        const blob = item.getAsFile();
-                        this.processImageFile(blob);
-                    }
-                }
-            },
-
-            processImageFile(file) {
-                if (!file.type.startsWith('image/')) return;
-                
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('画像サイズが大きすぎます（上限5MB）');
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.setImage(e.target.result);
-                    this.saveData();
-                };
-                reader.readAsDataURL(file);
-            },
-
-            setImage(base64String) {
-                this.currentImage = base64String;
-                this.dom.previewImage.src = base64String;
-                this.dom.imagePreviewContainer.classList.remove('hidden');
-            },
-
-            removeImage(save = true) {
-                this.currentImage = null;
-                this.dom.previewImage.src = '';
-                this.dom.imagePreviewContainer.classList.add('hidden');
-                if (save) this.saveData();
-            },
-
-            // --- モーダル関連 ---
-
+            /**
+             * 削除確認モーダルを表示
+             */
             openDeleteModal() {
-                if (this.dom.memoInput.value.trim().length === 0 && !this.currentImage) return;
+                if (this.dom.memoInput.value.trim().length === 0) return;
                 this.dom.deleteModal.classList.add('active');
             },
 
+            /**
+             * 削除確認モーダルを閉じる
+             */
             closeDeleteModal() {
                 this.dom.deleteModal.classList.remove('active');
             },
 
+            /**
+             * 削除実行
+             */
             confirmDelete() {
                 this.resetWithTimestamp(true);
                 this.closeDeleteModal();
             },
 
-            // --- ユーティリティ: Base64 to File ---
-            base64ToFile(base64, filename) {
-                const arr = base64.split(',');
-                const mime = arr[0].match(/:(.*?);/)[1];
-                const bstr = atob(arr[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
-                }
-                return new File([u8arr], filename, { type: mime });
-            },
-
-            // --- 共有・コピー ---
-
+            /**
+             * クリップボードにコピー
+             */
             async copyToClipboard() {
                 const text = this.dom.memoInput.value;
-                const image = this.currentImage;
+                if (!text.trim()) return;
 
                 try {
-                    // 両方ある場合、ClipboardItemで両方書き込みを試みる
-                    if (image && text.trim()) {
-                        const file = this.base64ToFile(image, 'image.png');
-                        const textBlob = new Blob([text], { type: 'text/plain' });
-                        
-                        await navigator.clipboard.write([
-                            new ClipboardItem({
-                                [file.type]: file,
-                                'text/plain': textBlob
-                            })
-                        ]);
-                    } 
-                    // 画像のみ
-                    else if (image) {
-                        const file = this.base64ToFile(image, 'image.png');
-                        await navigator.clipboard.write([
-                            new ClipboardItem({ [file.type]: file })
-                        ]);
-                    }
-                    // テキストのみ
-                    else if (text.trim()) {
-                        await navigator.clipboard.writeText(text);
-                    }
+                    await navigator.clipboard.writeText(text);
+                    // ここでトーストなどを出すことも可能だが、指示により削除済み
                 } catch (err) {
-                    console.error('Clipboard write failed', err);
-                    // フォールバック: テキストのみ
-                    if (text.trim()) {
-                        try {
-                            await navigator.clipboard.writeText(text);
-                        } catch (e) {}
-                    }
+                    console.error('Failed to copy', err);
                 }
             },
 
-            async shareContent() {
+            /**
+             * 共有機能（Web Share API）
+             */
+            async shareText() {
                 const text = this.dom.memoInput.value;
-                const image = this.currentImage;
-
-                if (!text.trim() && !image) {
+                if (!text.trim()) {
                     this.dom.memoInput.focus();
                     return;
                 }
 
-                // Web Share APIが使える場合
                 if (navigator.share) {
                     try {
-                        const shareData = {
-                            title: 'Quick Share Memo', // Android等でSubjectになることがある
-                            text: text
-                        };
-
-                        if (image) {
-                            try {
-                                // 拡張子をMIMEタイプから推測
-                                const mime = image.match(/:(.*?);/)[1];
-                                const ext = mime.split('/')[1] || 'png';
-                                const file = this.base64ToFile(image, `share_image.${ext}`);
-                                const files = [file];
-
-                                // ファイル共有がサポートされているか確認
-                                if (navigator.canShare && navigator.canShare({ files })) {
-                                    shareData.files = files;
-                                }
-                            } catch (e) {
-                                console.error('Image prep failed', e);
-                            }
-                        }
-
-                        // 最終的なデータで共有可能かチェック（filesとtextの組み合わせ等）
-                        if (navigator.canShare && !navigator.canShare(shareData)) {
-                             // 組み合わせがダメなら、ファイル優先で試す（またはテキスト優先）
-                             // ここではフォールバックせずエラーとしてcatchブロックへ
-                             throw new Error('This share combination is not supported');
-                        }
-
-                        await navigator.share(shareData);
-
+                        await navigator.share({ text: text });
                     } catch (err) {
-                        console.error('Share failed:', err);
-                        // シェア失敗時はクリップボードコピーへフォールバック
-                        this.copyToClipboard();
+                        // AbortError等は無視
                     }
                 } else {
+                    // 非対応ブラウザの場合はコピーを実行
                     this.copyToClipboard();
                 }
             }
         };
 
-        // 初期化
+        // DOM構築完了後に初期化
         document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
