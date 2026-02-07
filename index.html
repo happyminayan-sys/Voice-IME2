@@ -87,9 +87,9 @@
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
     "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
   }
 }
@@ -105,11 +105,20 @@
                 <span>クイックシェア</span>
             </h1>
             <div class="flex items-center gap-1">
+                <!-- 日記ボタン (新規追加) -->
+                <button onclick="app.insertDiary()" class="text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 transition-all p-2 rounded-full active:scale-90" title="日記テンプレートを挿入">
+                    <i class="fa-solid fa-book text-lg"></i>
+                </button>
+                
+                <!-- 日時ボタン -->
                 <button onclick="app.insertTime()" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all p-2 rounded-full active:scale-90" title="日時を挿入">
                     <i class="fa-regular fa-clock text-xl"></i>
                 </button>
+                
                 <div class="w-px h-4 bg-gray-300 mx-1"></div>
                 <span id="charCount" class="text-[10px] text-gray-400 font-mono w-14 text-right">0文字</span>
+                
+                <!-- 削除ボタン -->
                 <button onclick="app.openDeleteModal()" class="text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all p-2 rounded-full ml-1 active:scale-90" title="削除">
                     <i class="fa-solid fa-trash-can text-lg"></i>
                 </button>
@@ -269,26 +278,44 @@
             },
 
             /**
-             * カーソル位置に日時を挿入
+             * 共通テキスト挿入処理
+             * @param {string} textToInsert 挿入するテキスト
              */
-            insertTime() {
-                const timestamp = this.getFormattedDate();
+            insertTextAtCursor(textToInsert) {
                 const input = this.dom.memoInput;
                 const start = input.selectionStart;
                 const end = input.selectionEnd;
-                const text = input.value;
+                const currentText = input.value;
 
-                const newText = text.substring(0, start) + timestamp + text.substring(end);
-                const newCursorPos = start + timestamp.length;
+                // テキストを挿入（選択範囲があれば置換）
+                const newText = currentText.substring(0, start) + textToInsert + currentText.substring(end);
+                const newCursorPos = start + textToInsert.length;
 
                 input.value = newText;
                 this.saveMemo();
                 this.updateCharCount();
                 
+                // フォーカスを戻してカーソル位置を更新
                 setTimeout(() => {
                     input.focus();
                     input.setSelectionRange(newCursorPos, newCursorPos);
                 }, 0);
+            },
+
+            /**
+             * カーソル位置に日時を挿入
+             */
+            insertTime() {
+                this.insertTextAtCursor(this.getFormattedDate());
+            },
+
+            /**
+             * 日記テンプレートを挿入
+             */
+            insertDiary() {
+                // 要望のテンプレート
+                const template = '\n(1)今日の失敗・悪かったこと\n(2)嬉しかったこと・感動したこと\n(3)明日の目標\n';
+                this.insertTextAtCursor(template);
             },
 
             /**
